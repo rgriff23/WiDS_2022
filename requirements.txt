@@ -3,3 +3,4 @@ scikit-learn==1.0.2
 xgboost==1.5.2
 missingpy==0.2.0
 kaggle==1.5.12
+umap-learn==0.5.2

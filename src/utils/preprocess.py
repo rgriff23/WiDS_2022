@@ -138,7 +138,7 @@ def preprocess_train_test(train: pd.DataFrame, test: pd.DataFrame, config: dict)
 
     # Log transform floor area
     logging.info(f"Log transforming floor_area.")
-    combo['floor_area'] = combo['floor_area'].apply(np.log)
+    #combo['floor_area'] = combo['floor_area'].apply(np.log)
 
     # Modify "Year_Factor" to map to yearly means
     logging.info(f"Mapping Year_Factor to yearly means, including test set.")
@@ -147,14 +147,30 @@ def preprocess_train_test(train: pd.DataFrame, test: pd.DataFrame, config: dict)
     year_means[7] = 72
     combo['Year_Mean'] = combo['Year_Factor'].map(year_means)
 
+    # Modify min and max temp to be relative
+    # logging.info("Modifying min and max temperatures to be relative to the average of each month.")
+    # min_temp_cols = [c for c in combo.columns if '_min_temp' in c]
+    # avg_temp_cols = [c for c in combo.columns if '_avg_temp' in c]
+    # max_temp_cols = [c for c in combo.columns if '_max_temp' in c]
+    # for month in (min_temp_cols, avg_temp_cols, max_temp_cols):
+    #     min_temp, avg_temp, max_temp = month[0], month[1], month[2]
+    #     combo[min_temp] = combo[avg_temp] - combo[min_temp]
+    #     combo[max_temp] = combo[max_temp] - combo[avg_temp]
+
+    # Jitter weather variables
+    logging.info("Jittering weather variables so they work with UMAP.")
+    def jitter(x):
+        return x + np.random.uniform(-0.1, 0.1, 1)
+    combo[config['weather_features']] = combo[config['weather_features']].applymap(jitter)
+
     # Group facilities
     combo['facility_type'] = combo['facility_type'].map(FACILITY_MAP)
 
     # Add features for missing numericals
-    logging.info(f"Adding categorical features for missingness in numerical columns: ")
-    for col in train.isna().sum()[train.isna().sum() > 0].index.tolist():
-        combo[f'missing_{col}'] = np.where(combo['energy_star_rating'].isna(), 'missing', 'present')
-        logging.info(f"    - Added feature: {f'missing_{col}'}: {train[col].isna().sum()} missing values")
+    # logging.info(f"Adding categorical features for missingness in numerical columns: ")
+    # for col in train.isna().sum()[train.isna().sum() > 0].index.tolist():
+    #     combo[f'missing_{col}'] = np.where(combo['energy_star_rating'].isna(), 'missing', 'present')
+    #     logging.info(f"    - Added feature: {f'missing_{col}'}: {train[col].isna().sum()} missing values")
 
     # Missing value imputation
     #combo = _missforest_imputation(combo, config)

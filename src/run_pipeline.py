@@ -12,16 +12,19 @@ if __name__ == '__main__':
     """
     This script trains a pipeline and outputs predictions.
     """
-    # Prediction file name
-    out_file = 'xgb_baseline.csv'
+
+    out_file = 'xgb_umap.csv'
+    reuse_preprocessed_data = False
 
     # Load train/test data
     train_df, test_df = load_train_test()
 
     # Preprocess train/test data
-    train_df, test_df = preprocess_train_test(train_df, test_df, config)
-    #train_df = load_local_data('preprocessed_train.csv')
-    #test_df = load_local_data('preprocessed_test.csv')
+    if reuse_preprocessed_data:
+        train_df = load_local_data('preprocessed_train.csv')
+        test_df = load_local_data('preprocessed_test.csv')
+    else:
+        train_df, test_df = preprocess_train_test(train_df, test_df, config)
 
     # Train pipeline using grid search to optimize hyper-parameters
     grid_search = grid_search_optimization(train_df, config)

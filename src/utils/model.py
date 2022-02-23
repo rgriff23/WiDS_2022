@@ -28,10 +28,10 @@ def _generate_one_year_holdout_splits(df: pd.DataFrame, holdout_years: list):
         test_ix = df[df['Year_Factor'] == year].index.tolist()
         splits.append((train_ix, test_ix))
 
-        logging.info("Cross-validation strategy: \n  3-fold, split using years 4, 5, and 6 as holdouts.")
+        logging.info(f"Cross-validation strategy: \n  3-fold, split using holdout years {holdout_years}.")
         logging.info(f"    Split {split_ix + 1}:\n")
         logging.info(f"      - Training rows: {len(train_ix)}")
-        logging.info(f"      - Training years: {df['Year_Factor'].min()} to {year - 1}")
+        logging.info(f"      - Training years: {df['Year_Factor'].unique().tolist()}")
         logging.info(f"      - Test rows: {len(test_ix)}")
         logging.info(f"      - Test years: {year}")
 
@@ -64,7 +64,7 @@ def grid_search_optimization(train: pd.DataFrame, config: dict):
 
     grid_search = GridSearchCV(estimator=full_pipeline,
                                param_grid=config['param_grid'],
-                               cv=_generate_one_year_holdout_splits(train, [4, 5, 6]),
+                               cv=_generate_one_year_holdout_splits(train, config["holdout_splits"]),
                                #cv=GroupKFold(n_splits=6).split(train, train[config['target']], train['Year_Factor']),
                                scoring=config["scoring"],
                                n_jobs=-1,  # Use all processors
@@ -75,5 +75,9 @@ def grid_search_optimization(train: pd.DataFrame, config: dict):
                     train[config['target']].values.ravel())
     logging.info(f"Best cross-validated RMSE: {round(-grid_search.best_score_, 3)}")
     logging.info(f"Best params:\n {pd.DataFrame.from_records(grid_search.best_params_, index=[0]).T}\n")
+    try:
+        logging.info(f"XGBoost best ntree: {grid_search.best_estimator_.best_ntree_limit}")
+    except:
+        pass
 
     return grid_search
